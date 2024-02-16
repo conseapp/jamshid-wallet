@@ -1,15 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
-# from .views import ProductViewSet
-#
-# router = DefaultRouter()
-# router.register(r'products', ProductViewSet, basename='product')
-# router.register(r'categories', views.CategoryViewSet, basename='category')
-# router.register(r'comments', views.CommentViewSet, basename='comment')
-# router.register(r'stocks', views.StockViewSet, basename='stock')
-# router.register(r'tags', views.TagViewSet, basename='tag')
+from api.views import DepositView, PurchaseView, GetUserBalance
 
 urlpatterns = [
-    path('', include(router.urls), name='api')
+    # path('', include(router.urls), name='api'),
+    path('deposit/', DepositView.as_view(), name='deposit'),
+    path('purchase/', PurchaseView.as_view(), name='purchase'),
+    path('getbalance/', GetUserBalance.as_view(), name='getbalance')
 ]
