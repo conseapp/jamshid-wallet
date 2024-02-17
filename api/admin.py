@@ -6,12 +6,14 @@ from api.models import User, Wallet, Transaction, Order
 
 class WalletAdmin(admin.StackedInline):
     model = Wallet
+    fk_name = 'user'
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     readonly_fields = ('oid', 'username', 'phone')
-    list_display = ['username', 'phone', 'balance']
+    list_display = ['oid', 'username', 'phone', 'balance']
+    list_display_links = ["oid", "username", "phone"]
     inlines = [WalletAdmin]
 
     def balance(self, obj):

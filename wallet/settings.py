@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get("DEBUG")))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "5.34.196.146", "jamshid.app", "127.0.0.1"]
 
 # Application definition
 
@@ -140,7 +140,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.BrowsableAPIRenderer',  # Comment out or remove this line
+        # 'rest_framework.renderers.BrowsableAPIRenderer',  # Comment out or remove this line
         'rest_framework.renderers.JSONRenderer',
 
     ],

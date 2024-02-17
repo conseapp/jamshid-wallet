@@ -6,7 +6,7 @@ from api.loggers import TransactionApiLogger
 
 # Create your models here.
 class Wallet(models.Model):
-    balance = models.IntegerField(default=0)
+    balance = models.PositiveIntegerField(default=0)
     wallet_address = models.UUIDField(default=uuid.uuid4, editable=False)
     user = models.OneToOneField("User", on_delete=models.CASCADE, related_name="wallet", unique=True, null=True)
 
@@ -73,9 +73,13 @@ class User(models.Model):
         Transaction.objects.create(user=self, type=Transaction.TransactionTypes.DEPOSIT, amount=amount)
         TransactionApiLogger.info(
             f"successfully added {amount} to user {self.oid}, new balance is {self.wallet.balance}")
-        return True
+        return f"successfully added {amount} to user {self.oid}, new balance is {self.wallet.balance}"
 
     def purchase_event(self, event_id: str, amount: int):
+        if self.wallet.balance < amount:
+            Order.objects.create(status=Order.OrderStats.CANCELLED, type=Order.OrderTypes.EVENT, event_id=event_id,
+                                 amount=amount, user=self)
+            return False
         order = Order.objects.create(status=Order.OrderStats.COMPLETED, type=Order.OrderTypes.EVENT, event_id=event_id,
                                      amount=amount, user=self)
         current_balance = self.wallet.balance
@@ -86,6 +90,7 @@ class User(models.Model):
         Transaction.objects.create(user=self, type=Transaction.TransactionTypes.PURCHASE, amount=amount, order=order)
         TransactionApiLogger.info(
             f"successfully purchased event {event_id} to user {self.oid}, new balance is {self.wallet.balance}")
+        return True
 
     def get_balance(self):
         return self.wallet.balance

@@ -77,9 +77,14 @@ class PurchaseView(APIView):
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             result = user.purchase_event(event_id, int(amount))
-
-            return Response(data=result, status=status.HTTP_202_ACCEPTED)
-
+            if result:
+                data = {
+                    "message": f"successfully purchased event {event_id} with amount of {amount} for user {user_id}, new balance is {user.wallet.balance}"}
+                return Response(data=data, status=status.HTTP_200_OK)
+            else:
+                data = {
+                    "message": f"Insufficient Funds, your balance: {user.wallet.balance}, event {event_id} price: {amount}"}
+                return Response(data=data, status=status.HTTP_406_NOT_ACCEPTABLE)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
