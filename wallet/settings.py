@@ -158,14 +158,14 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
 
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost',
+    # 'http://localhost',
     'http://localhost:5173',
-    'http://localhost:8080',
+    # 'http://localhost:8080',
     'https://jamshid.app',
 )
 
 # CSRF CONFIG
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://cms.api.jamshid.app'
+    'https://wallet.jamshid.app'
 ]
