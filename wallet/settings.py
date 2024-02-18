@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'zarinpal',
     'api'
 ]
 
@@ -167,5 +168,24 @@ CORS_ORIGIN_WHITELIST = (
 # CSRF CONFIG
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://wallet.jamshid.app'
+    'https://wallet.jamshid.app',
+    'http://localhost',
+    'http://127.0.0.1:'
+    'http://127.0.0.1:8000'
 ]
+
+# Zarinpal Config
+
+MERCHANT = os.environ.get("MERCHANT")
+
+SANDBOX = True
+
+if SANDBOX:
+    sandbox = 'sandbox'
+else:
+    sandbox = 'www'
+
+ZP_API_REQUEST = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentRequest.json"
+ZP_API_VERIFY = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentVerification.json"
+ZP_API_STARTPAY = f"https://{sandbox}.zarinpal.com/pg/StartPay/"
+CALL_BACK_URL = 'https://wallet.jamshid.app/zarinpal/verify/'
