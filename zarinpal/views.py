@@ -1,3 +1,5 @@
+from django.shortcuts import render
+from django.contrib.humanize.templatetags.humanize import intcomma
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,7 +10,6 @@ from zarinpal.utils import sent_payment_request, verify_payment_request
 from api.models import Order, Transaction, User
 from api.utils import check_authentication_api, get_user_data
 from api.loggers import PaymentApiLogger, TransactionApiLogger
-
 
 class PaymentRequestView(APIView):
     serializer_class = PaymentRequestSerializer
@@ -68,19 +69,35 @@ class PaymentVerifyView(APIView):
         response = verify_payment_request(authority=order.Authority, amount=order.amount)
 
         if response.status_code == 200:
-            order.status = Order.OrderStats.COMPLETED
-            order.save()
-            Transaction.objects.create(order=order, ref_id=response.data["RefID"],
-                                       response_code=response.data["Status"])
-            response.data["message"] = "payment successful, ref_id: {}".format(response.data["RefID"])
-            TransactionApiLogger.info(
-                f"transaction successfully done for user {order.user.oid}, order: {order.id}")
-            PaymentApiLogger.info(
-                f"payment completed for user {order.user.id}, order_id: {order.id}, message: {response.data['status_code_msg']}")
+            if order.status == "COMPLETED":
+                response.data["message"] = "عملیات پرداخت موفق بوده و قبلا تایید پرداخت انجام شده"
+                response.data["status_text"] = "عمیات موفق"
+            else:
+                order.status = Order.OrderStats.COMPLETED
+                order.save()
+                Transaction.objects.create(order=order, ref_id=response.data["RefID"],
+                                        response_code=response.data["Status"])
+                if order.type == "PURCHASE":
+                    response.data["message"] = f"رزرو ایونت {order.event_id} با موفقیت انجام شد"
+                    response.data["event_id"] = order.event_id
+                elif order.type == "DEPOSIT":
+                    response.data["message"] = f"مبلغ {intcomma(order.amount)} تومان به حساب شما واریز شد"
+                response.data["status_text"] = "عمیات موفق"
+                TransactionApiLogger.info(
+                    f"transaction successfully done for user {order.user.oid}, order: {order.id}")
+                PaymentApiLogger.info(
+                    f"payment completed for user {order.user.id}, order_id: {order.id}, message: {response.data['status_code_msg']}")
+
         else:
             order.status = Order.OrderStats.CANCELLED
+            response.data["message"] = f"متاسفانه پرداخت شما موفقیت آمیز نبود\nلطفا مجدد تلاش کنید\nدر صورت کسر وجه، تا 72 ساعت آینده به حساب شما بازمیگردد\nدر غیر این صورت با پشتیبانی تماس بگیرید"
+            response.data["status_text"] = "عمیات ناموفق"
+
             PaymentApiLogger.warning(
                 f"payment failed for user {order.user.id}, order_id: {order.id} ,err: {response.data['status_code_msg']}")
 
             order.save()
-        return response
+        response.data["greet"] = f"{order.user.username} عزیز"
+        res = render(request, 'zarinpal/verify-payment.html', context = {"data": response.data})
+        
+        return res

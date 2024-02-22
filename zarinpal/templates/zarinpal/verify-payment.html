@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="container">
+    <div class="box">
+        {% if data.Status == 100 or data.Status == 101 %}
+            <div class="status ok">{{ data.status_text }}</div>
+        {% else %}
+            <div class="status nok">{{ data.status_text }}</div>
+        {% endif %}
+        <div class="ref">کد رهگیری: {{ data.RefID }}</div>
+        <div class="greet">{{ data.greet }}</div>
+
+        <div class="message">{{ data.message|linebreaks }}</div>
+        <a href="https://jamshid.app" class="redirect">برو به جمشید</a>
+    </div>
+
+</div>
+
+</body>
+</html>
