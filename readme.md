@@ -18,19 +18,34 @@ admin panel
 
 method = POST
 
-### Deposit
+### Payment Request
 ```http request
-http://wallet.jamshid.app/api/deposit/?user_id=<user_id>&amount=<amount>
+https://wallet.jamshid.app/zarinpal/request/
 ```
+## Guide:
+### example body:
+```json
+{
+  "amount": <amount>,
+  "description": <description>,
+  "phone": <phone>,
+  "type": <deposit/purchase>,
+  "user_id": <user_id>,
+  "event_id": <event_id> **required when type is purchase
+}
+```
+in response you will get a url and order_id in response<br>
+redirect user to that url<br>
+other functionalities handled in backend
 
 ### Get Balance
 ```http request
-http://wallet.jamshid.app/api/getbalance/?user_id=<user_id>
+https://wallet.jamshid.app/api/getbalance/?user_id=<user_id>
 ```
 
-### Purchase
+### Purchase from wallet
 ```http request
-http://wallet.jamshid.app/api/purchase/?user_id=<user_id>&amount=<amount>&event_id=<event_id>
+https://wallet.jamshid.app/api/purchase/?user_id=<user_id>&amount=<amount>&event_id=<event_id>
 ```
 
 ## be sure to pass jwt token as "token" in headers
