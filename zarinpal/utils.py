@@ -1,12 +1,10 @@
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
-
 import requests
 import json
 
 MERCHANT_ID = settings.MERCHANT
-
 ZP_API_REQUEST = settings.ZP_API_REQUEST
 ZP_API_VERIFY = settings.ZP_API_VERIFY
 ZP_API_STARTPAY = settings.ZP_API_STARTPAY
@@ -14,14 +12,13 @@ CALL_BACK_URL = settings.CALL_BACK_URL
 ZP_ERROR_CODES = settings.ZP_ERROR_CODES
 
 
-
 def sent_payment_request(request_data):
     data = {
         "MerchantID": MERCHANT_ID,
         "CallbackURL": CALL_BACK_URL,
-        "Amount": request_data["Amount"],
-        "Description": request_data["Description"],
-        "Phone": request_data["Phone"]
+        "Amount": request_data["amount"],
+        "Description": request_data["description"],
+        "Phone": request_data["phone"]
     }
     headers = {'content-type': 'application/json', 'content-length': str(len(data))}
     try:
@@ -61,8 +58,6 @@ def verify_payment_request(authority, amount):
             return Response(data=response, status=status.HTTP_200_OK)
         else:
             return Response(data=response, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-
 
     except requests.exceptions.Timeout:
         return Response(status=status.HTTP_504_GATEWAY_TIMEOUT)

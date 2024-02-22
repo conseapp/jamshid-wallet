@@ -58,3 +58,11 @@ class TransactionApiLogger(BaseLogger, ABC):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+class PaymentApiLogger(BaseLogger, ABC):
+    logger = logging.getLogger('PaymentApiLogger')
+    handler = logging.FileHandler(BASE_DIR / 'logs' / 'payment_api.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)

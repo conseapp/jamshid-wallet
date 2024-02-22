@@ -38,7 +38,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    readonly_fields = ('transaction_id', 'user', 'type', 'amount', 'order', 'ref_id')
+    readonly_fields = ('transaction_id', 'user', 'type', 'amount', 'order', 'ref_id', 'response_code')
     list_display = ['transaction_id', 'user', 'type', 'amount', 'order', 'created_at']
     list_filter = ['order__type', 'order__user']
 

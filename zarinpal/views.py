@@ -7,6 +7,7 @@ from zarinpal.utils import sent_payment_request, verify_payment_request
 from api.models import Order, Transaction, User
 from api.utils import check_authentication_api, get_user_data
 import re
+from api.loggers import PaymentApiLogger, TransactionApiLogger
 
 
 class PaymentRequestView(APIView):
@@ -26,19 +27,22 @@ class PaymentRequestView(APIView):
         if not serializer.is_valid():
             return Response(data={"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         if authentication_api:
-            user_data = get_user_data(serializer.data["user_id"])
-            if not user_data:
-                return Response(data={"message": "Invalid user id"}, status=status.HTTP_404_NOT_FOUND)
             try:
                 user = User.objects.get(oid=serializer.data["user_id"])
             except User.DoesNotExist:
+                user_data = get_user_data(serializer.data["user_id"])
+                if not user_data:
+                    return Response(data={"message": "Invalid user id"}, status=status.HTTP_404_NOT_FOUND)
                 user = User.objects.create(
                     username=user_data['username'],
                     oid=serializer.data["user_id"],
                     phone=user_data['phone']
                 )
+                PaymentApiLogger.info(
+                    f"new user created, id:{user.oid}, username: {user.username}, phone: {user.phone}")
             except Exception:
                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
             response = sent_payment_request(serializer.data)
             if response.status_code == 200:
                 order = Order.objects.create(status=Order.OrderStats.AWAITING_PAYMENT,
@@ -47,9 +51,13 @@ class PaymentRequestView(APIView):
                                                                                          "type"] == "purchase" else None,
                                              Authority=response.data["authority"],
                                              user=user,
-                                             amount=serializer.data["Amount"],
+                                             amount=serializer.data["amount"],
                                              payment_method=Order.PaymentMethods.BANK)
+                PaymentApiLogger.info(
+                    f"payment gate successfully requested for user {user.id} ,order_id {order.id} amount: {order.amount}")
                 response.data["order_id"] = order.order_id
+            else:
+                PaymentApiLogger.warning(f"failed to get payment gate for user {user.id} ,err: {response.data}")
             return response
 
 
@@ -66,7 +74,14 @@ class PaymentVerifyView(APIView):
             Transaction.objects.create(order=order, ref_id=response.data["RefID"],
                                        response_code=response.data["Status"])
             response.data["message"] = "payment successful, ref_id: {}".format(response.data["RefID"])
+            TransactionApiLogger.info(
+                f"transaction successfully done for user {order.user.oid}, order: {order.id}")
+            PaymentApiLogger.info(
+                f"payment completed for user {order.user.id}, order_id: {order.id}, message: {response.data['status_code_msg']}")
         else:
             order.status = Order.OrderStats.CANCELLED
+            PaymentApiLogger.warning(
+                f"payment failed for user {order.user.id}, order_id: {order.id} ,err: {response.data['status_code_msg']}")
+
             order.save()
         return response

@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 
 class PaymentRequestSerializer(serializers.Serializer):
-    Amount = serializers.IntegerField()
-    Description = serializers.CharField(max_length=200)
-    Phone = serializers.CharField(max_length=11)
+    amount = serializers.IntegerField()
+    description = serializers.CharField(max_length=200)
+    phone = serializers.CharField(max_length=11)
     type = serializers.ChoiceField(choices=[('deposit', 'DEPOSIT'), ('purchase', 'PURCHASE')])
     user_id = serializers.CharField(max_length=50)
     event_id = serializers.CharField(max_length=50, required=False)
