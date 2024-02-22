@@ -2,11 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import json
+import re
 from zarinpal.serializers import PaymentRequestSerializer
 from zarinpal.utils import sent_payment_request, verify_payment_request
 from api.models import Order, Transaction, User
 from api.utils import check_authentication_api, get_user_data
-import re
 from api.loggers import PaymentApiLogger, TransactionApiLogger
 
 
@@ -17,15 +17,14 @@ class PaymentRequestView(APIView):
         serializer = self.serializer_class(data=request.data)
         TOKEN = request.headers.get('token')
         pattern = r'^[B,b]earer\s([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)$'
-        # if not TOKEN:
-        #     return Response(status=status.HTTP_403_FORBIDDEN)
-        # if not re.match(pattern, TOKEN):
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not TOKEN:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        if not re.match(pattern, TOKEN):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # authentication_api = check_authentication_api(request, TOKEN)
-        authentication_api = True
         if not serializer.is_valid():
             return Response(data={"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        authentication_api = check_authentication_api(request, TOKEN)
         if authentication_api:
             try:
                 user = User.objects.get(oid=serializer.data["user_id"])
