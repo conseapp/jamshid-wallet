@@ -6,16 +6,21 @@ from api.models import User, Wallet, Transaction, Order
 
 class WalletAdmin(admin.StackedInline):
     model = Wallet
+    readonly_fields = ('balance',)
+    can_delete = False
     fk_name = 'user'
 
 
 class OrderInline(admin.TabularInline):
     model = Order
-    fields = ['order_id', 'status', 'amount', 'type', 'event_id']  # Add fields you want to display
+    fields = ['order_id','modified_at','payment_method', 'amount', 'type','status', 'event_id','transaction_id']  # Add fields you want to display
     fk_name = 'user'
-    readonly_fields = ['order_id', 'status', 'amount', 'type', 'event_id']
+    readonly_fields = ['order_id','modified_at','payment_method', 'amount', 'type','status', 'event_id','transaction_id']
     can_delete = False
     extra = 0
+
+    def transaction_id(self,obj):
+        return obj.transaction.transaction_id
 
 
 @admin.register(User)
