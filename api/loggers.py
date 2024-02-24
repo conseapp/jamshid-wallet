@@ -66,3 +66,19 @@ class PaymentApiLogger(BaseLogger, ABC):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+class RegisterEventApiLogger(BaseLogger, ABC):
+    logger = logging.getLogger('RegisterEventApiLogger')
+    handler = logging.FileHandler(BASE_DIR / 'logs' / 'register_event_api.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
+class RedisApiLogger(BaseLogger, ABC):
+    logger = logging.getLogger('RedisApiLogger')
+    handler = logging.FileHandler(BASE_DIR / 'logs' / 'redis_api.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)

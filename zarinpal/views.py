@@ -6,10 +6,12 @@ from rest_framework import status
 import json
 import re
 from zarinpal.serializers import PaymentRequestSerializer
-from zarinpal.utils import sent_payment_request, verify_payment_request
+from zarinpal.utils import sent_payment_request, verify_payment_request, register_mafia_event, redis_credentials, \
+    get_user_token
 from api.models import Order, Transaction, User
 from api.utils import check_authentication_api, get_user_data
-from api.loggers import PaymentApiLogger, TransactionApiLogger
+from api.loggers import PaymentApiLogger, TransactionApiLogger, RegisterEventApiLogger
+
 
 class PaymentRequestView(APIView):
     serializer_class = PaymentRequestSerializer
@@ -59,6 +61,8 @@ class PaymentRequestView(APIView):
             else:
                 PaymentApiLogger.warning(f"failed to get payment gate for user {user.id} ,err: {response.data}")
             return response
+        else:
+            return Response(data={"error": "invalid user token"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PaymentVerifyView(APIView):
@@ -76,8 +80,17 @@ class PaymentVerifyView(APIView):
                 order.status = Order.OrderStats.COMPLETED
                 order.save()
                 Transaction.objects.create(order=order, ref_id=response.data["RefID"],
-                                        response_code=response.data["Status"])
+                                           response_code=response.data["Status"])
                 if order.type == "PURCHASE":
+                    user_token = get_user_token(order.user.oid, redis_credentials)
+                    if user_token:
+                        res = register_mafia_event(order.event_id, user_token.data['token'])
+                        if res.status_code == 201:
+                            response.data["core-message"] = res.json()
+                            response.data["event-name"] = res.json()['data']["event_name"]
+                            RegisterEventApiLogger.info('successfully registered event in jamshid core db')
+                        else:
+                            response.data["core-message"] = "failed to register event in core db"
                     response.data["message"] = f"رزرو ایونت {order.event_id} با موفقیت انجام شد"
                     response.data["event_id"] = order.event_id
                 elif order.type == "DEPOSIT":
@@ -90,7 +103,8 @@ class PaymentVerifyView(APIView):
 
         else:
             order.status = Order.OrderStats.CANCELLED
-            response.data["message"] = f"متاسفانه پرداخت شما موفقیت آمیز نبود\nلطفا مجدد تلاش کنید\nدر صورت کسر وجه، تا 72 ساعت آینده به حساب شما بازمیگردد\nدر غیر این صورت با پشتیبانی تماس بگیرید"
+            response.data[
+                "message"] = f"متاسفانه پرداخت شما موفقیت آمیز نبود\nلطفا مجدد تلاش کنید\nدر صورت کسر وجه، تا 72 ساعت آینده به حساب شما بازمیگردد\nدر غیر این صورت با پشتیبانی تماس بگیرید"
             response.data["status_text"] = "عمیات ناموفق"
 
             PaymentApiLogger.warning(
@@ -98,6 +112,6 @@ class PaymentVerifyView(APIView):
 
             order.save()
         response.data["greet"] = f"{order.user.username} عزیز"
-        res = render(request, 'zarinpal/verify-payment.html', context = {"data": response.data})
-        
+        res = render(request, 'zarinpal/verify-payment.html', context={"data": response.data})
+
         return res

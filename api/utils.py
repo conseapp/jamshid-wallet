@@ -2,6 +2,9 @@ import requests
 import json
 from typing import Dict
 import time
+
+from django.http import JsonResponse
+
 from api.loggers import AuthenticationApiLogger
 
 
@@ -72,9 +75,9 @@ def get_user_data(user_id: str) -> Dict:
 
 def check_authentication_api(request, token):
     _, received_token = token.split()
-    api_endpoint = 'https://api.mafia.jamshid.app/auth/check-token'
+    api_endpoint = 'https://api.mafia.jamshid.app/auth/check-token/'
     headers = {'Authorization': f'Bearer {received_token}'}
-    response = None
+    response = JsonResponse
     try:
         response = requests.post(api_endpoint, headers=headers)
         response_json = response.json()

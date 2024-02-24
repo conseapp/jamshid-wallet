@@ -1,8 +1,14 @@
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework import status
+from dotenv import load_dotenv
+import os
 import requests
 import json
+from api.contextmanagers import RedisConnection, RedisConnectioKeys
+
+load_dotenv()
 
 MERCHANT_ID = settings.MERCHANT
 ZP_API_REQUEST = settings.ZP_API_REQUEST
@@ -10,6 +16,12 @@ ZP_API_VERIFY = settings.ZP_API_VERIFY
 ZP_API_STARTPAY = settings.ZP_API_STARTPAY
 CALL_BACK_URL = settings.CALL_BACK_URL
 ZP_ERROR_CODES = settings.ZP_ERROR_CODES
+
+redis_credentials: RedisConnectioKeys = {
+    'host': '181',
+    'port': '6379',
+    'password': str(os.getenv('REDIS_PASSWORD'))
+}
 
 
 def sent_payment_request(request_data):
@@ -63,3 +75,38 @@ def verify_payment_request(authority, amount):
         return Response(status=status.HTTP_504_GATEWAY_TIMEOUT)
     except requests.exceptions.ConnectionError:
         return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+def register_mafia_event(event_id, token):
+    url = "https://api.mafia.jamshid.app/event/reserve/mock/"
+    headers = {'content-type': 'application/json', "Authorization": token}
+    try:
+        response = requests.post(
+            url=url,
+            headers=headers,
+            data={
+                "event_id": event_id,
+                "requested_at": int(timezone.localtime().timestamp())
+            })
+        if response.data['status'] == 200:
+            return Response({"message": response.json()}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": response.json()}, status=status.HTTP_400_BAD_REQUEST)
+
+    except requests.exceptions.Timeout:
+        return Response(status=status.HTTP_504_GATEWAY_TIMEOUT)
+    except requests.exceptions.ConnectionError:
+        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+def get_user_token(user_id: str, redis_credentials: RedisConnectioKeys):
+    with RedisConnection(**redis_credentials, retries=3) as rd:
+        key = f"jwt-{user_id}"
+        print('in redis connection')
+        if rd.exists(key):
+            token = rd.get(key)
+            print('jwt token exists')
+
+            return Response({"token": token}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "user not logged in"}, status=status.HTTP_404_NOT_FOUND)
