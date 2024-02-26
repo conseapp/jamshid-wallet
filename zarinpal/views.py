@@ -83,6 +83,10 @@ class PaymentVerifyView(APIView):
                                            response_code=response.data["Status"])
                 if order.type == "PURCHASE":
                     user_token = get_user_token(order.user.oid, redis_credentials)
+
+                    # r = redis(redis.StrictRedis(host="localhost", port="6379", password=os.environ.get(""),
+                    #                           decode_responses=True))
+                    print(user_token)
                     if user_token:
                         res = register_mafia_event(order.event_id, user_token.data['token'])
                         if res.status_code == 201:

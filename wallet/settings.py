@@ -92,7 +92,7 @@ elif os.environ.get('DB_ENV') == "PRODUCTION":
             'NAME': os.environ.get("DB_NAME"),
             'USER': os.environ.get("DB_USER"),
             'PASSWORD': os.environ.get("DB_PASSWORD"),
-            'HOST': '5.253.25.161',
+            'HOST': 'localhost',
             'PORT': '5432',
         }
     }

@@ -22,7 +22,7 @@ class PaymentRequestSerializer(serializers.Serializer):
 
 
 class RegisterEventSerializer(serializers.Serializer):
-    event_id = serializers.CharField(max_length=50, required=False)
+    event_id = serializers.CharField(max_length=50)
     requested_at = serializers.IntegerField()
 
     def validate(self, data):

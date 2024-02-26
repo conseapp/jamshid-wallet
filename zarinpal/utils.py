@@ -88,14 +88,17 @@ def register_mafia_event(event_id, token):
         "event_id": event_id,
         "requested_at": timestamp
     }
-    serializer = RegisterEventSerializer(data)
+    serializer = RegisterEventSerializer(data=data)
     if serializer.is_valid():
-
+        print(serializer.data)
         try:
             response = requests.post(
                 url=url,
                 headers=headers,
                 data=serializer.data)
+            print(response.json()['status'])
+            print(response.json()['message'])
+
             if response.json()['status'] == 200:
                 return Response({"message": response.json()["message"]}, status=status.HTTP_201_CREATED)
             else:

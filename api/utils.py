@@ -82,7 +82,7 @@ def check_authentication_api(request, token):
         response = requests.post(api_endpoint, headers=headers)
         response_json = response.json()
         if response_json["status"] == 200 or response_json["status"] == 201:
-            user_id = request.json().get("user_id")
+            user_id = request.data.get("user_id")
             if user_id is None:
                 user_id = request.query_params.get("user_id")
             AuthenticationApiLogger.info(
