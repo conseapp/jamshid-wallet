@@ -82,8 +82,11 @@ def check_authentication_api(request, token):
         response = requests.post(api_endpoint, headers=headers)
         response_json = response.json()
         if response_json["status"] == 200 or response_json["status"] == 201:
+            user_id = request.json().get("user_id")
+            if user_id is None:
+                user_id = request.query_params.get("user_id")
             AuthenticationApiLogger.info(
-                f'successfully authenticated request for user {request.query_params.get("user_id")}')
+                f'successfully authenticated request for user {user_id}')
             return True
         elif response_json["status"] == 500:
             AuthenticationApiLogger.warning(
