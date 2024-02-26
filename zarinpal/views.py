@@ -83,15 +83,13 @@ class PaymentVerifyView(APIView):
                                            response_code=response.data["Status"])
                 if order.type == "PURCHASE":
                     user_token = get_user_token(order.user.oid, redis_credentials)
+                    # user_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJfaWQiOnsiJG9pZCI6IjY1MmI4NGJhYWRkNWIzZjczMzhjY2NmNSJ9LCJhY2Nlc3NfbGV2ZWwiOjEsImV4cCI6MTcxMTU2NTUxNywiaWF0IjoxNzA4OTczNTE3fQ.58S71BkNBCzN2chhnHmQDEIV4HXePYNrJmD9y3dy1AO7zXiCdhITPXifASkQL7uoZ0Vcw0vK9R6z0_pSzdJezw'
 
-                    # r = redis(redis.StrictRedis(host="localhost", port="6379", password=os.environ.get(""),
-                    #                           decode_responses=True))
-                    print(user_token)
                     if user_token:
-                        res = register_mafia_event(order.event_id, user_token.data['token'])
+                        res = register_mafia_event(order.event_id, user_token)# user_token.data['token'])
                         if res.status_code == 201:
-                            response.data["core-message"] = res.json()
-                            response.data["event-name"] = res.json()['data']["event_name"]
+                            response.data["core-message"] = res.data
+                            response.data["event-name"] = res.data["title"]
                             RegisterEventApiLogger.info('successfully registered event in jamshid core db')
                         else:
                             response.data["core-message"] = "failed to register event in core db"

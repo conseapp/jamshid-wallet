@@ -21,15 +21,3 @@ class PaymentRequestSerializer(serializers.Serializer):
         return data
 
 
-class RegisterEventSerializer(serializers.Serializer):
-    event_id = serializers.CharField(max_length=50)
-    requested_at = serializers.IntegerField()
-
-    def validate(self, data):
-        # Get the values of 'type' and 'event_id' from the validated data
-        event_id = data.get('event_id')
-        requested_at = data.get('requested_at')
-
-        # Check if the 'type' is 'purchase' and 'event_id' is not provided
-
-        return data

@@ -77,37 +77,29 @@ def verify_payment_request(authority, amount):
         return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-from zarinpal.serializers import RegisterEventSerializer
 
 
 def register_mafia_event(event_id, token):
     url = "https://api.mafia.jamshid.app/event/reserve/mock/"
     headers = {'content-type': 'application/json', "Authorization": f"Bearer {token}"}
     timestamp = int(timezone.localtime().timestamp())
-    data = {
-        "event_id": event_id,
-        "requested_at": timestamp
-    }
-    serializer = RegisterEventSerializer(data=data)
-    if serializer.is_valid():
-        print(serializer.data)
-        try:
-            response = requests.post(
-                url=url,
-                headers=headers,
-                data=serializer.data)
-            print(response.json()['status'])
-            print(response.json()['message'])
 
-            if response.json()['status'] == 200:
-                return Response({"message": response.json()["message"]}, status=status.HTTP_201_CREATED)
-            else:
-                return Response({"message": response.json()["message"]}, status=status.HTTP_400_BAD_REQUEST)
+    data = r'{"event_id" : "%s","requested_at": %i}' % (event_id, timestamp)
+    try:
+        response = requests.post(
+            url=url,
+            headers=headers,
+            data=data)
 
-        except requests.exceptions.Timeout:
-            return Response(status=status.HTTP_504_GATEWAY_TIMEOUT)
-        except requests.exceptions.ConnectionError:
-            return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        if response.json()['status'] == 200:
+            return Response(response.json()["data"], status=status.HTTP_201_CREATED)
+        else:
+            return Response(response.json()["data"], status=status.HTTP_400_BAD_REQUEST)
+
+    except requests.exceptions.Timeout:
+        return Response(status=status.HTTP_504_GATEWAY_TIMEOUT)
+    except requests.exceptions.ConnectionError:
+        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 def get_user_token(user_id: str, redis_credentials: RedisConnectioKeys):
