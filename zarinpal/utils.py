@@ -90,7 +90,6 @@ def register_mafia_event(event_id, token):
             url=url,
             headers=headers,
             data=data)
-
         if response.json()['status'] == 200:
             return Response(response.json()["data"], status=status.HTTP_201_CREATED)
         else:

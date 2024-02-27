@@ -81,6 +81,9 @@ def check_authentication_api(request, token):
     try:
         response = requests.post(api_endpoint, headers=headers)
         response_json = response.json()
+        print(f'response => {str(response)}')
+        print(f'response.json() => {str(response.json())}')
+
         if response_json["status"] == 200 or response_json["status"] == 201:
             user_id = request.data.get("user_id")
             if user_id is None:

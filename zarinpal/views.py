@@ -84,9 +84,8 @@ class PaymentVerifyView(APIView):
                 if order.type == "PURCHASE":
                     user_token = get_user_token(order.user.oid, redis_credentials)
                     # user_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJfaWQiOnsiJG9pZCI6IjY1MmI4NGJhYWRkNWIzZjczMzhjY2NmNSJ9LCJhY2Nlc3NfbGV2ZWwiOjEsImV4cCI6MTcxMTU2NTUxNywiaWF0IjoxNzA4OTczNTE3fQ.58S71BkNBCzN2chhnHmQDEIV4HXePYNrJmD9y3dy1AO7zXiCdhITPXifASkQL7uoZ0Vcw0vK9R6z0_pSzdJezw'
-
                     if user_token:
-                        res = register_mafia_event(order.event_id, user_token)# user_token.data['token'])
+                        res = register_mafia_event(order.event_id, user_token.data["token"])
                         if res.status_code == 201:
                             response.data["core-message"] = res.data
                             response.data["event-name"] = res.data["title"]
