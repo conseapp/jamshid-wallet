@@ -82,9 +82,41 @@ class GetUserBalance(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
+# class CancelEvent(APIView):
+#     def post(self, request):
+#         order_id = request.query_params.get('order_id')
+#         event_start_time = request.query_params.get('event_start_time')
+#         TOKEN = request.headers.get('token')
+#         pattern = r'^[B,b]earer\s([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)$'
+#         if not TOKEN:
+#             return Response(status=status.HTTP_403_FORBIDDEN)
+#         if not re.match(pattern, TOKEN):
+#             return Response(status=status.HTTP_400_BAD_REQUEST)
+#
+#         order = Order.objects.get(order_id=order_id)
+#         if order.status != Order.OrderStats.COMPLETED:
+#             return Response(data={"message": "order status is not completed"}, status=status.HTTP_404_NOT_FOUND)
+#         authentication_api = check_authentication_api(request, TOKEN)
+#         if authentication_api:
+#             try:
+#                 commission, time_difference_hour = calculate_commission(order.purchase_time, int(event_start_time))
+#                 order.refund(commission, time_difference_hour)
+#                 data = {
+#                     "message": "order refunded successfully"}
+#                 return Response(data=data, status=status.HTTP_200_OK)
+#
+#             except Exception:
+#                 return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#
+#         else:
+#             return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
 class CancelEvent(APIView):
     def post(self, request):
-        order_id = request.query_params.get('order_id')
+        user_id = request.query_params.get('user_id')
+        user = User.objects.get(oid=user_id)
+        event_id = request.query_params.get('event_id')
         event_start_time = request.query_params.get('event_start_time')
         TOKEN = request.headers.get('token')
         pattern = r'^[B,b]earer\s([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)$'
@@ -93,14 +125,14 @@ class CancelEvent(APIView):
         if not re.match(pattern, TOKEN):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        order = Order.objects.get(order_id=order_id)
+        order = Order.objects.get(event_id=event_id, user_id=user.id)
         if order.status != Order.OrderStats.COMPLETED:
             return Response(data={"message": "order status is not completed"}, status=status.HTTP_404_NOT_FOUND)
-        authentication_api = True  # check_authentication_api(request, TOKEN)
+        authentication_api = check_authentication_api(request, TOKEN)
         if authentication_api:
             try:
-                comission = calculate_commission(order.purchase_time, int(event_start_time))
-                order.refund(comission)
+                commission, time_difference_hour = calculate_commission(order.purchase_time, int(event_start_time))
+                order.refund(commission, time_difference_hour)
                 data = {
                     "message": "order refunded successfully"}
                 return Response(data=data, status=status.HTTP_200_OK)

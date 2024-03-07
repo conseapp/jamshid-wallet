@@ -47,13 +47,13 @@ class Order(models.Model):
     def __str__(self):
         return str(self.order_id)
 
-    def refund(self, commission: int):
+    def refund(self, commission: int, time_difference):
         commission_price = int(commission * self.amount / 100)
         self.user.deposit(commission_price)
         self.status = self.OrderStats.REFUNDED
         self.save()
         OrderLogger.info(
-            f"order refunded successfully, amount of {commission_price} returned to user {self.user.oid}, cancel_time = {self.refund_time}")
+            f"order refunded successfully, amount of {commission_price} returned to user {self.user.oid}, cancel_time = {self.refund_time}, time_delta = {time_difference}")
         return True
 
 

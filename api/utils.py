@@ -105,8 +105,8 @@ def calculate_commission(event_purchase_time: datetime, event_start_time: int):
     time_difference_hour = (event_start_time - int(event_purchase_time.timestamp())) / 60 / 60
 
     if time_difference_hour <= 1:
-        return 40
+        return 40, time_difference_hour
     elif 1 <= time_difference_hour <= 5:
-        return 80
+        return 80, time_difference_hour
     else:
-        return 95
+        return 95, time_difference_hour
