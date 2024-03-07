@@ -82,3 +82,11 @@ class RedisApiLogger(BaseLogger, ABC):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+class OrderLogger(BaseLogger, ABC):
+    logger = logging.getLogger('OrderLogger')
+    handler = logging.FileHandler(BASE_DIR / 'logs' / 'order.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)

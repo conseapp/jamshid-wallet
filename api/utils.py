@@ -2,6 +2,7 @@ import requests
 import json
 from typing import Dict
 import time
+from datetime import datetime
 
 from django.http import JsonResponse
 
@@ -98,3 +99,14 @@ def check_authentication_api(request, token):
     except Exception as err:
         AuthenticationApiLogger.exception(f"Exception occurred: {err}")
         return False
+
+
+def calculate_commission(event_purchase_time: datetime, event_start_time: int):
+    time_difference_hour = (event_start_time - int(event_purchase_time.timestamp())) / 60 / 60
+
+    if time_difference_hour <= 1:
+        return 40
+    elif 1 <= time_difference_hour <= 5:
+        return 80
+    else:
+        return 95

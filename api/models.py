@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 import uuid
-from api.loggers import TransactionApiLogger
+from api.loggers import TransactionApiLogger, OrderLogger
 
 
 class Wallet(models.Model):
@@ -40,9 +40,21 @@ class Order(models.Model):
     amount = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    purchase_time = models.DateTimeField(null=True, blank=True)
+    deposit_time = models.DateTimeField(null=True, blank=True)
+    refund_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return str(self.order_id)
+
+    def refund(self, commission: int):
+        commission_price = int(commission * self.amount / 100)
+        self.user.deposit(commission_price)
+        self.status = self.OrderStats.REFUNDED
+        self.save()
+        OrderLogger.info(
+            f"order refunded successfully, amount of {commission_price} returned to user {self.user.oid}, cancel_time = {self.refund_time}")
+        return True
 
 
 class Transaction(models.Model):
