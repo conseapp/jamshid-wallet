@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from api.models import User, Wallet
-from api.utils import check_authentication_api, get_user_data, calculate_commission
+from api.utils import check_authentication_api, get_user_data, calculate_commission, update_mongo
 from api.models import Order
 import re
 
@@ -137,7 +137,7 @@ class CancelEvent(APIView):
                 order.refund(commission, time_difference_hour)
                 data = {
                     "message": "order refunded successfully"}
-                # update_mongo(event_id, user_id)
+                update_mongo(event_id, user_id)
                 return Response(data=data, status=status.HTTP_200_OK)
 
             except Exception as err:

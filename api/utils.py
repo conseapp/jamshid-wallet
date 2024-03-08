@@ -7,6 +7,13 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.utils import timezone
 from api.loggers import AuthenticationApiLogger
+from pymongo import MongoClient
+from bson import ObjectId
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 class GetDevAccess:
@@ -113,23 +120,21 @@ def calculate_commission(event_start_time: int):
     else:
         return 95, time_difference_hour
 
-from pymongo import MongoClient
-from bson import ObjectId
-
 
 def update_mongo(event_id, user_id):
-    mongo_client = MongoClient("mongodb://root:geDteDd0Ltg2135FJYQ6rjNYHYkGQa70@homa.ir.fing.ir:36474")
+    MONGO_CONNECT = os.environ.get("MONGO_CONNECT")
+    mongo_client = MongoClient(MONGO_CONNECT)
     database = mongo_client['conse']
     collection = database["events"]
     event_id = ObjectId(event_id)
     player_id = ObjectId(user_id)
     event_query = {'_id': event_id}
-    player_query = {'players._id': player_id}
 
-    event = collection.find(event_query)
+    event = collection.find_one(event_query)
     if event:
         # Find the index of the user in the players array
-        player_index = next((index for index, player in enumerate(event['players']) if player['_id'] == user_id), None)
+        player_index = next((index for index, player in enumerate(event['players']) if player['_id'] == player_id),
+                            None)
         if player_index is not None:
             # Remove the user from the players array
             del event['players'][player_index]
@@ -143,5 +148,5 @@ def update_mongo(event_id, user_id):
     else:
         print(f"Event with _id {event_id} not found")
 
-    # Close the connection when done
+        # Close the connection when done
     mongo_client.close()
