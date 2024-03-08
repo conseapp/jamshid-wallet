@@ -115,7 +115,7 @@ def calculate_commission(event_start_time: int):
     time_difference_hour = (event_start_time - int(timezone.now().timestamp())) / 60 / 60
     if time_difference_hour <= 1:
         return 40, time_difference_hour
-    elif 1 <= time_difference_hour <= 5:
+    elif 1 < time_difference_hour <= 5:
         return 80, time_difference_hour
     else:
         return 95, time_difference_hour

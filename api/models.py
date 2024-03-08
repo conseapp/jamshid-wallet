@@ -92,21 +92,26 @@ class User(models.Model):
                                  amount=amount,
                                  user=self)
             return False
-        order = Order.objects.create(status=Order.OrderStats.COMPLETED,
-                                     type=Order.OrderTypes.PURCHASE,
-                                     payment_method=Order.PaymentMethods.WALLET,
-                                     event_id=event_id,
-                                     amount=amount,
-                                     user=self)
-        current_balance = self.wallet.balance
-        new_balance = current_balance - amount
-        wallet = self.wallet
-        wallet.balance = new_balance
-        wallet.save()
-        Transaction.objects.create(order=order)
-        TransactionApiLogger.info(
-            f"successfully purchased event {event_id} to user {self.oid}, new balance is {self.wallet.balance}")
-        return True
+        try:
+            order = Order.objects.get(user_id=self.id, event_id=event_id)
+            return False
+        except Order.DoesNotExist as error:
+
+            order = Order.objects.create(status=Order.OrderStats.COMPLETED,
+                                         type=Order.OrderTypes.PURCHASE,
+                                         payment_method=Order.PaymentMethods.WALLET,
+                                         event_id=event_id,
+                                         amount=amount,
+                                         user=self)
+            current_balance = self.wallet.balance
+            new_balance = current_balance - amount
+            wallet = self.wallet
+            wallet.balance = new_balance
+            wallet.save()
+            Transaction.objects.create(order=order)
+            TransactionApiLogger.info(
+                f"successfully purchased event {event_id} to user {self.oid}, new balance is {self.wallet.balance}")
+            return True
 
     def get_balance(self):
         return self.wallet.balance
