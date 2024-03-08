@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 import uuid
 from api.loggers import TransactionApiLogger, OrderLogger
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class Wallet(models.Model):
@@ -93,16 +95,18 @@ class User(models.Model):
                                  user=self)
             return False
         try:
-            order = Order.objects.get(user_id=self.id, event_id=event_id)
-            return False
+            order = Order.objects.get(user_id=self.id, event_id=event_id, status=Order.OrderStats.COMPLETED)
+            data = {"message": f"event {event_id} already registered for user {self.oid}"}
+            return Response(data=data, status=status.HTTP_200_OK)
+
         except Order.DoesNotExist as error:
 
             order = Order.objects.create(status=Order.OrderStats.COMPLETED,
-                                         type=Order.OrderTypes.PURCHASE,
-                                         payment_method=Order.PaymentMethods.WALLET,
-                                         event_id=event_id,
-                                         amount=amount,
-                                         user=self)
+                                        type=Order.OrderTypes.PURCHASE,
+                                        payment_method=Order.PaymentMethods.WALLET,
+                                        event_id=event_id,
+                                        amount=amount,
+                                        user=self)
             current_balance = self.wallet.balance
             new_balance = current_balance - amount
             wallet = self.wallet

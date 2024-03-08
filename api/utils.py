@@ -6,7 +6,7 @@ from datetime import datetime
 
 from django.http import JsonResponse
 from django.utils import timezone
-from api.loggers import AuthenticationApiLogger
+from api.loggers import AuthenticationApiLogger, MangoDBLogger
 from pymongo import MongoClient
 from bson import ObjectId
 
@@ -90,7 +90,7 @@ def check_authentication_api(request, token):
         response = requests.post(api_endpoint, headers=headers)
 
         # print(f'response => {str(response)}')
-        print(f'response.data => {json.loads(response.text)}')
+        # print(f'response.data => {json.loads(response.text)}')
         # print(f'response.data => {type(json.loads(response.text))}')
 
         # response_json = response.json()
@@ -141,11 +141,13 @@ def update_mongo(event_id, user_id):
 
             # Update the event document
             collection.update_one({'_id': event_id}, {'$set': {'players': event['players']}})
-
-            print(f"User with _id {user_id} removed from event with _id {event_id}")
+            MangoDBLogger.info(f"User with _id {user_id} removed from event with _id {event_id}")
+            # print(f"User with _id {user_id} removed from event with _id {event_id}")
         else:
-            print(f"User with _id {user_id} not found in event with _id {event_id}")
+            MangoDBLogger.info(f"User with _id {user_id} not found in event with _id {event_id}")
+            # print(f"User with _id {user_id} not found in event with _id {event_id}")
     else:
+        MangoDBLogger.info(f"Event with _id {event_id} not found")
         print(f"Event with _id {event_id} not found")
 
         # Close the connection when done

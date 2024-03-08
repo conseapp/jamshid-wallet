@@ -90,3 +90,11 @@ class OrderLogger(BaseLogger, ABC):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+class MangoDBLogger(BaseLogger, ABC):
+    logger = logging.getLogger('MangoLogger')
+    handler = logging.FileHandler(BASE_DIR / 'logs' / 'mango.log', encoding='utf-8')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)

@@ -126,18 +126,23 @@ class CancelEvent(APIView):
         if not re.match(pattern, TOKEN):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        order = Order.objects.get(event_id=event_id, user_id=user.id)
-        if order.status != Order.OrderStats.COMPLETED:
+        order = Order.objects.get(event_id=event_id, user_id=user.id, status=Order.OrderStats.COMPLETED)
+        if order.status == Order.OrderStats.REFUNDED:
+            return Response(data={"message": "already canceled"}, status=status.HTTP_404_NOT_FOUND)
+        elif order.status != Order.OrderStats.COMPLETED:
             return Response(data={"message": "order status is not completed"}, status=status.HTTP_404_NOT_FOUND)
+
+
         authentication_api = check_authentication_api(request, TOKEN)
 
         if authentication_api:
             try:
                 commission, time_difference_hour = calculate_commission(int(event_start_time))
+                print(commission, time_difference_hour)
                 order.refund(commission, time_difference_hour)
+                update_mongo(event_id, user_id)
                 data = {
                     "message": "order refunded successfully"}
-                update_mongo(event_id, user_id)
                 return Response(data=data, status=status.HTTP_200_OK)
 
             except Exception as err:
