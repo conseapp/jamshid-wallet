@@ -120,6 +120,7 @@ class CancelEvent(APIView):
         event_start_time = request.query_params.get('event_start_time')
         TOKEN = request.headers.get('token')
         pattern = r'^[B,b]earer\s([a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)$'
+
         if not TOKEN:
             return Response(status=status.HTTP_403_FORBIDDEN)
         if not re.match(pattern, TOKEN):
@@ -129,16 +130,19 @@ class CancelEvent(APIView):
         if order.status != Order.OrderStats.COMPLETED:
             return Response(data={"message": "order status is not completed"}, status=status.HTTP_404_NOT_FOUND)
         authentication_api = check_authentication_api(request, TOKEN)
+
         if authentication_api:
             try:
-                commission, time_difference_hour = calculate_commission(order.purchase_time, int(event_start_time))
+                commission, time_difference_hour = calculate_commission(int(event_start_time))
                 order.refund(commission, time_difference_hour)
                 data = {
                     "message": "order refunded successfully"}
+                # update_mongo(event_id, user_id)
                 return Response(data=data, status=status.HTTP_200_OK)
 
-            except Exception:
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception as err:
+                print(err)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"message": str(err)})
 
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)

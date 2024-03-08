@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 from django.http import JsonResponse
-
+from django.utils import timezone
 from api.loggers import AuthenticationApiLogger
 
 
@@ -81,10 +81,13 @@ def check_authentication_api(request, token):
     response = JsonResponse
     try:
         response = requests.post(api_endpoint, headers=headers)
-        response_json = response.json()
-        print(f'response => {str(response)}')
-        print(f'response.json() => {str(response.json())}')
 
+        # print(f'response => {str(response)}')
+        print(f'response.data => {json.loads(response.text)}')
+        # print(f'response.data => {type(json.loads(response.text))}')
+
+        # response_json = response.json()
+        response_json = json.loads(response.text)
         if response_json["status"] == 200 or response_json["status"] == 201:
             user_id = request.data.get("user_id")
             if user_id is None:
@@ -101,12 +104,44 @@ def check_authentication_api(request, token):
         return False
 
 
-def calculate_commission(event_purchase_time: datetime, event_start_time: int):
-    time_difference_hour = (event_start_time - int(event_purchase_time.timestamp())) / 60 / 60
-
+def calculate_commission(event_start_time: int):
+    time_difference_hour = (event_start_time - int(timezone.now().timestamp())) / 60 / 60
     if time_difference_hour <= 1:
         return 40, time_difference_hour
     elif 1 <= time_difference_hour <= 5:
         return 80, time_difference_hour
     else:
         return 95, time_difference_hour
+
+from pymongo import MongoClient
+from bson import ObjectId
+
+
+def update_mongo(event_id, user_id):
+    mongo_client = MongoClient("mongodb://root:geDteDd0Ltg2135FJYQ6rjNYHYkGQa70@homa.ir.fing.ir:36474")
+    database = mongo_client['conse']
+    collection = database["events"]
+    event_id = ObjectId(event_id)
+    player_id = ObjectId(user_id)
+    event_query = {'_id': event_id}
+    player_query = {'players._id': player_id}
+
+    event = collection.find(event_query)
+    if event:
+        # Find the index of the user in the players array
+        player_index = next((index for index, player in enumerate(event['players']) if player['_id'] == user_id), None)
+        if player_index is not None:
+            # Remove the user from the players array
+            del event['players'][player_index]
+
+            # Update the event document
+            collection.update_one({'_id': event_id}, {'$set': {'players': event['players']}})
+
+            print(f"User with _id {user_id} removed from event with _id {event_id}")
+        else:
+            print(f"User with _id {user_id} not found in event with _id {event_id}")
+    else:
+        print(f"Event with _id {event_id} not found")
+
+    # Close the connection when done
+    mongo_client.close()

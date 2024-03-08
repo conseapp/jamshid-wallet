@@ -18,6 +18,7 @@ def update_wallet(sender, instance, created, **kwargs):
             instance.deposit_time = timezone.localtime()
 
     if instance.status == Order.OrderStats.COMPLETED and instance.type == Order.OrderTypes.PURCHASE:
+        print(f"purchase_time {instance.purchase_time}")
         if not instance.purchase_time:
             instance.purchase_time = timezone.localtime()
 
